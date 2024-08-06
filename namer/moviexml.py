@@ -144,6 +144,58 @@ def write_movie_xml_file(info: LookedUpFileInfo, config: NamerConfig, trailer: O
 
     return str(doc.toprettyxml(indent='  ', newl='\n', encoding='UTF-8'), encoding='UTF-8')
 
+def write_scene_xml_file(info: LookedUpFileInfo, config: NamerConfig, trailer: Optional[Path] = None, poster: Optional[Path] = None, background: Optional[Path] = None, phash: Optional[PerceptualHash] = None) -> str:
+    """
+    Parse porndb info and create an Emby/Jellyfin xml file from the data.
+    """
+    doc = Document()
+    root: Element = doc.createElement('episodedetails')
+    doc.appendChild(root)
+    add_sub_element(doc, root, 'title', info.name)
+    add_sub_element(doc, root, 'showtitle', info.site)
+    add_sub_element(doc, root, 'season', info.date[:4] if info.date else None)
+    add_sub_element(doc, root, 'plot', info.description)
+    add_sub_element(doc, root, 'outline')
+    add_sub_element(doc, root, 'dateadded')
+    add_sub_element(doc, root, 'trailer', str(trailer) if trailer else info.trailer_url)
+    add_sub_element(doc, root, 'year', info.date[:4] if info.date else None)
+    add_sub_element(doc, root, 'premiered', info.date)
+    add_sub_element(doc, root, 'releasedate', info.date)
+    add_sub_element(doc, root, 'mpaa', 'XXX')
+
+    art = add_sub_element(doc, root, 'art')
+    add_sub_element(doc, art, 'poster', poster.name if poster else info.poster_url)
+    add_sub_element(doc, root, 'thumb', background.name if background else info.background_url)
+
+    if config.enable_metadataapi_genres:
+        add_all_sub_element(doc, root, 'genre', info.tags)
+    else:
+        add_all_sub_element(doc, root, 'tag', info.tags)
+        add_sub_element(doc, root, 'genre', config.default_genre)
+
+    add_sub_element(doc, root, 'studio', info.site)
+    add_sub_element(doc, root, 'theporndbid', str(info.uuid))
+    add_sub_element(doc, root, 'theporndbguid', str(info.guid))
+    add_sub_element(doc, root, 'phoenixadultid')
+    add_sub_element(doc, root, 'phoenixadulturlid')
+
+    add_sub_element(doc, root, 'phash', str(phash.phash) if phash else None)
+    add_sub_element(doc, root, 'sourceid', info.source_url)
+
+    for performer in info.performers:
+        actor = add_sub_element(doc, root, 'actor')
+        add_sub_element(doc, actor, 'type', 'Actor')
+        add_sub_element(doc, actor, 'name', performer.name)
+        add_sub_element(doc, actor, 'role', performer.role)
+
+        if performer.image:
+            image = performer.image.name if isinstance(performer.image, Path) else performer.image
+            add_sub_element(doc, actor, 'image', image)
+            add_sub_element(doc, actor, 'thumb', image)
+
+    add_sub_element(doc, root, 'fileinfo')
+
+    return str(doc.toprettyxml(indent='  ', newl='\n', encoding='UTF-8'), encoding='UTF-8')
 
 def write_nfo(video_file: Path, new_metadata: LookedUpFileInfo, namer_config: NamerConfig, trailer: Optional[Path], poster: Optional[Path], background: Optional[Path], phash: Optional[PerceptualHash]):
     """
@@ -152,7 +204,8 @@ def write_nfo(video_file: Path, new_metadata: LookedUpFileInfo, namer_config: Na
     if video_file and new_metadata and namer_config.write_nfo:
         target = video_file.parent / (video_file.stem + '.nfo')
         with open(target, 'wt', encoding='UTF-8') as nfo_file:
-            data = write_movie_xml_file(new_metadata, namer_config, trailer, poster, background, phash)
+#            data = write_movie_xml_file(new_metadata, namer_config, trailer, poster, background, phash)
+            data = write_scene_xml_file(new_metadata, namer_config, trailer, poster, background, phash)
             nfo_file.write(data)
 
         set_permissions(target, namer_config)
