@@ -42,6 +42,7 @@ name_parser = {_site}{_sep}{_optional_date}{_ts}{_name}{_dot}{_ext}
 # * 'all_performers' - comma seperated list of all performers
 # * 'act' - an act, parsed from original file name, don't use.
 # * 'ext' - original file's extension, you should keep this.
+# * 'source_file_name' - original file name
 # * 'video_codec' - video codec of file, like h264
 # * 'audio_codec' - audio codec of file, like acc
 # * 'trans' - 'TS', or 'ts' if detected in original file name.
@@ -184,6 +185,9 @@ enabled_poster = False
 
 # List of which images would be downloaded options are: poster,background,performer
 download_type = poster,background,performer
+
+# Downloaded images format: png or jpeg
+image_format = png
 
 # These genres are noisey and not recommend for use.  If this is false a single default
 # genre will be used.  These are called Tags on the porndb json response objects, genre's

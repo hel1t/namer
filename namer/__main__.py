@@ -20,6 +20,7 @@ from requests_cache import CachedSession
 
 import namer.metadataapi
 import namer.namer
+import namer.videohashes
 import namer.watchdog
 import namer.web
 from namer.configuration_utils import default_config
@@ -32,9 +33,11 @@ DESCRIPTION = (
     The first argument should be 'watchdog', 'rename', 'suggest', or 'help' to see this message, for more help on rename, call
     namer 'namer rename -h'
 
-    watchdog and help take no arguments (please see the config file example https://github.com/4c0d3r/namer/blob/main/namer.cfg)
+    watchdog and help take no arguments (please see the config file example https://github.com/ThePornDatabase/namer/blob/main/namer/namer.cfg.default)
 
     'suggest' takes a file name as input and will output a suggested file name.
+    'url' print url to namer web ui.
+    'hash' takes a file name as input and will output a hashes in json format.
     """
 )
 
@@ -77,6 +80,8 @@ def main():
         namer.metadataapi.main(arg_list[1:])
     elif arg1 == 'url':
         print(f'http://{config.host}:{config.port}{config.web_root}')
+    elif arg1 == 'hash':
+        namer.videohashes.main(arg_list[1:])
     elif arg1 in ['-h', 'help', None]:
         print(DESCRIPTION)
 

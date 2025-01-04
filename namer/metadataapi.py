@@ -256,12 +256,12 @@ def download_file(url: str, file: Path, config: NamerConfig) -> bool:
 @logger.catch
 def get_image(url: str, infix: str, video_file: Optional[Path], config: NamerConfig) -> Optional[Path]:
     if url and video_file:
-        file = video_file.parent / (video_file.stem + infix + '.png')
+        file = video_file.parent / (video_file.stem + infix + '.' + config.image_format)
         if url.startswith('http') and not file.exists():
             file.parent.mkdir(parents=True, exist_ok=True)
             if download_file(url, file, config):
                 with Image.open(file) as img:
-                    img.save(file, 'png')
+                    img.save(file, config.image_format)
                 set_permissions(file, config)
                 return file
             else:
@@ -585,7 +585,7 @@ def main(args_list: List[str]):
 
     config = default_config(args.configfile.absolute() if args.configfile else None)
 
-    if args.verbose is not None:
+    if args.verbose:
         level = 'DEBUG' if config.debug else 'INFO'
         logger.add(sys.stdout, format=config.console_format, level=level, diagnose=config.diagnose_errors)
 

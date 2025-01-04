@@ -106,7 +106,11 @@ def verify_configuration(config: NamerConfig, formatter: PartialFormatter) -> bo
     """
     success = __verify_naming_config(config, formatter)
     success = __verify_watchdog_config(config, formatter) and success
-    success: bool = __verify_ffmpeg(config.ffmpeg) and success
+    success = __verify_ffmpeg(config.ffmpeg) and success
+
+    if config.image_format not in ['jpeg', 'png'] and success:
+        logger.error('image_format should be png or jpeg')
+        success = False
 
     return success
 
@@ -121,7 +125,7 @@ def get_str(updater: ConfigUpdater, section: str, key: str) -> Optional[str]:
     """
     if updater.has_option(section, key):
         output = updater.get(section, key)
-        return str(output.value)
+        return str(output.value) if output.value else output.value
 
 
 # Ini file string converters, to and from NamerConfig type
@@ -255,6 +259,7 @@ field_info: Dict[str, Tuple[str, Optional[Callable[[Optional[str]], Any]], Optio
     'enabled_tagging': ('metadata', to_bool, from_bool),
     'enabled_poster': ('metadata', to_bool, from_bool),
     'download_type': ('metadata', to_str_list_lower, from_str_list_lower),
+    'image_format': ('metadata', None, None),
     'enable_metadataapi_genres': ('metadata', to_bool, from_bool),
     'default_genre': ('metadata', None, None),
     'language': ('metadata', None, None),
@@ -334,7 +339,7 @@ def from_config(config: ConfigUpdater, namer_config: NamerConfig) -> NamerConfig
 def resource_file_to_str(package: str, file_name: str) -> str:
     config_str = ''
     if hasattr(resources, 'files'):
-        config_str = resources.files(package).joinpath(file_name).read_text()
+        config_str = resources.files(package).joinpath(file_name).read_text(encoding='UTF-8')
     elif hasattr(resources, 'read_text'):
         config_str = resources.read_text(package, file_name)
 
@@ -380,7 +385,7 @@ def default_config(user_set: Optional[Path] = None) -> NamerConfig:
             file = Path(file)
 
         if file.is_file():
-            user_config.read(file)
+            user_config.read(file, encoding='UTF-8')
             break
 
     return from_config(user_config, namer_config)

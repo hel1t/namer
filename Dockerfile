@@ -1,5 +1,6 @@
-FROM ubuntu:jammy as base
+FROM ubuntu:latest AS base
 
+ENV PATH="/root/.local/bin:$PATH"
 ENV TZ=Europe/London
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -8,6 +9,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
        python3-pip \
        python3 \
+       pipx \
        ffmpeg \
        tzdata \
        curl \
@@ -23,10 +25,8 @@ RUN apt-get update \
        libssl-dev \
        systemd \
        systemd-sysv \
-       python3-pip \
        python3-dev \
        python3-venv \
-       curl \
        wget \
        gnupg2 \
        xvfb \
@@ -57,7 +57,6 @@ RUN npm install --global pnpm
 
 RUN mkdir /work/
 COPY . /work
-ENV PATH="/root/.local/bin:$PATH"
 WORKDIR /work
 RUN rm -rf /work/namer/__pycache__/ || true \
     && rm -rf /work/test/__pycache__/ || true \
@@ -66,7 +65,7 @@ RUN ( Xvfb :99 & cd /work/ && poetry run poe build_all )
 
 FROM base
 COPY --from=build /work/dist/namer-*.tar.gz /
-RUN pip3 install /namer-*.tar.gz \
+RUN pipx install /namer-*.tar.gz \
     && rm /namer-*.tar.gz
 
 ARG BUILD_DATE
@@ -80,5 +79,5 @@ ENV GIT_HASH=$GIT_HASH
 ENV PROJECT_VERSION=$PROJECT_VERSION
 
 EXPOSE 6980
-HEALTHCHECK --interval=1m --timeout=30s CMD curl -s $(python3 -m namer url)/api/healthcheck >/dev/null || exit 1
-ENTRYPOINT ["python3", "-m", "namer", "watchdog"]
+HEALTHCHECK --interval=1m --timeout=30s CMD curl -s $(namer url)/api/healthcheck >/dev/null || exit 1
+ENTRYPOINT ["namer", "watchdog"]
